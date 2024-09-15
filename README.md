@@ -1,2 +1,3 @@
 # cubemx_cntrl_firmware
-test
+
+Uploading my first draft of a cubemx makefile firmware project.
