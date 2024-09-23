@@ -60,7 +60,13 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void error_handler(void)
+
+/**
+ * @brief   Error handler for error detection in operational logic. Currently implemented as a while(1) loop.
+ * @param   None
+ * @author  Peter Woolsey
+ */
+void internal_error_handler(void)
 {
   HAL_GPIO_WritePin(DEBUG1_GPIO_Port, DEBUG1_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(DEBUG2_GPIO_Port, DEBUG2_Pin, GPIO_PIN_RESET);
@@ -74,12 +80,17 @@ void error_handler(void)
   return;
 }
 
+/**
+ * @brief Handles the state transition from OPERATION to STARTUP
+ * @param  None
+ * @author Peter Woolsey
+ */
 void discharge_handler(void)
 {
   /*
    Insert code for toggling relays and checking that aux opened
   */
-
+ 
   // actually discharge the board
   HAL_GPIO_WritePin(MCU_OK_GPIO_Port, MCU_OK_Pin, GPIO_PIN_RESET);
   int i = 0;
@@ -95,6 +106,11 @@ void discharge_handler(void)
   return;
 }
 
+/**
+ * @brief   Handles the change of state from STARTUP to OPERATION
+ * @param   None
+ * @author  Peter Woolsey
+ */
 void toggle_precharge(void)
 {
   /*
@@ -117,18 +133,34 @@ void toggle_precharge(void)
   return;
 }
 
+/**
+ * @brief   Responsible from switching from STARTUP to CHARGING
+ * @param   None
+ * @author  Peter Woolsey
+ */
 void toggle_charging(void)
 {
   HAL_GPIO_WritePin(DEBUG2_GPIO_Port, DEBUG2_Pin, GPIO_PIN_SET);
   return;
 }
 
+/**
+ * @brief   Responsible from switching from CHARGING to STARTUP
+ * @param   None
+ * @author  Peter Woolsey
+ */
 void untoggle_charging(void)
 {
   HAL_GPIO_WritePin(DEBUG2_GPIO_Port, DEBUG2_Pin, GPIO_PIN_RESET);
   return;
 }
 
+/**
+ * @brief   Gets the switch status through a digital read of the switches' GPIO pins.
+ * @param   None
+ * @return  uint8-t - a status macro which fits into a uint8-t
+ * @author  Peter Woolsey
+ */
 uint8_t get_switch_status(void)
 {
   if (HAL_GPIO_ReadPin(IGNITION_SW_GPIO_Port, IGNITION_SW_Pin) == GPIO_PIN_SET)
@@ -156,6 +188,11 @@ uint8_t get_switch_status(void)
   return ERROR;
 }
 
+/**
+ * @brief   TODO - Checks to ensure that the aux contactors are in the expected position for the current state. 
+ * @param   current_status 
+ * @author  Peter Woolsey
+ */
 void aux_check(uint8_t)
 {
   HAL_Delay(500);
@@ -209,7 +246,7 @@ int main(void)
     new_status = get_switch_status();
     if (new_status == ERROR)
     {
-      error_handler();
+      internal_error_handler();
     }
 
     if (new_status != status)
@@ -228,7 +265,7 @@ int main(void)
         }
         else
         {
-          error_handler(); // should never reach here
+          internal_error_handler(); // should never reach here
         }
       }
       else if (status == OPERATION)
@@ -240,7 +277,7 @@ int main(void)
         }
         else
         {
-          error_handler(); // should never reach here
+          internal_error_handler(); // should never reach here
         }
       }
       else if (status == CHARGING)
@@ -252,13 +289,13 @@ int main(void)
         }
         else
         {
-          error_handler(); // should never reach here
+          internal_error_handler(); // should never reach here
         }
       }
       else
       {
         status = ERROR;
-        error_handler();
+        internal_error_handler();
       }
     }
 
